@@ -14,5 +14,6 @@ How to run?
 ```
 $ cd sports.williamhill.com
 $ workon sports.williamhill.com
-$ python run.py
+$ python manage.py --matches
+$ python manage.py --web-sockets $ID
 ```
