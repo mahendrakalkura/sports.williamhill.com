@@ -38,32 +38,30 @@ class WebSockets():
     TYPES_PING_CLIENT = '\x19'
 
     TOPICS = [
-        #     'sportsbook/football/{id:d}/animation',
+        'sportsbook/football/{id:d}/animation',
         #     'sportsbook/football/{id:d}/i18n/en-gb/commentary',
         # 'sportsbook/football/{id:d}/stats/away/cards/red',
         # 'sportsbook/football/{id:d}/stats/away/cards/yellow',
         # 'sportsbook/football/{id:d}/stats/away/corners',
         # 'sportsbook/football/{id:d}/stats/away/freeKicks',
         # 'sportsbook/football/{id:d}/stats/away/goals',
-        #     'sportsbook/football/{id:d}/stats/away/lineup',
         # 'sportsbook/football/{id:d}/stats/away/penalties',
         # 'sportsbook/football/{id:d}/stats/away/shots/offTarget',
         # 'sportsbook/football/{id:d}/stats/away/shots/onTarget',
         # 'sportsbook/football/{id:d}/stats/away/shots/onWoodwork',
-        #     'sportsbook/football/{id:d}/stats/away/substitutions',
-        #     'sportsbook/football/{id:d}/stats/away/throwIns',
+        # 'sportsbook/football/{id:d}/stats/away/substitutions',
+        # 'sportsbook/football/{id:d}/stats/away/throwIns',
         # 'sportsbook/football/{id:d}/stats/home/cards/red',
         # 'sportsbook/football/{id:d}/stats/home/cards/yellow',
         # 'sportsbook/football/{id:d}/stats/home/corners',
         # 'sportsbook/football/{id:d}/stats/home/freeKicks',
         # 'sportsbook/football/{id:d}/stats/home/goals',
-        #     'sportsbook/football/{id:d}/stats/home/lineup',
         # 'sportsbook/football/{id:d}/stats/home/penalties',
         # 'sportsbook/football/{id:d}/stats/home/shots/offTarget',
         # 'sportsbook/football/{id:d}/stats/home/shots/onTarget',
         # 'sportsbook/football/{id:d}/stats/home/shots/onWoodwork',
-        #     'sportsbook/football/{id:d}/stats/home/substitutions',
-        #     'sportsbook/football/{id:d}/stats/home/throwIns',
+        # 'sportsbook/football/{id:d}/stats/home/substitutions',
+        # 'sportsbook/football/{id:d}/stats/home/throwIns',
         # 'sportsbook/football/{id:d}/stats/homeTeamPossesion',
         # 'sportsbook/football/{id:d}/stats/period',
         # 'sportsbook/football/{id:d}/stats/time',
@@ -166,18 +164,22 @@ class WebSockets():
     def process_payload(self, payload):
         if payload[0][0].endswith('/animation'):
             # TODO
+            print(repr(payload))
             return
         if payload[0][0].endswith('/i18n/en-gb/commentary'):
             # TODO
+            print(repr(payload))
             return
         if payload[0][0].endswith('/stats/away/cards/red'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'away',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'redCard',
                     'type': None,
@@ -192,12 +194,14 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/cards/yellow'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'away',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'yellowCard',
                     'type': None,
@@ -212,12 +216,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/corners'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'away',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'corner',
                     'type': None,
@@ -232,12 +235,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/freeKicks'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'away',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'dfreekick',
                     'type': None,
@@ -252,12 +254,14 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/goals'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'away',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'goal',
                     'type': 'G',
@@ -270,18 +274,16 @@ class WebSockets():
             count = self.get_count('away', 'goal')
             self.log('/stats/away/goals', count)
             return
-        if payload[0][0].endswith('/stats/away/lineup'):
-            # TODO
-            print(repr(payload))
-            return
         if payload[0][0].endswith('/stats/away/penalties'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'away',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'penalty',
                     'type': 'P',
@@ -296,12 +298,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/shots/offTarget'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'away',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'shotoffgoal',
                     'type': None,
@@ -316,12 +317,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/shots/onTarget'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'away',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'shotongoal',
                     'type': None,
@@ -336,12 +336,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/away/shots/onWoodwork'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'away',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'shotongoal',
                     'type': None,
@@ -355,21 +354,53 @@ class WebSockets():
             self.log('/stats/away/shots/onWoodwork', count)
             return
         if payload[0][0].endswith('/stats/away/substitutions'):
-            # TODO
-            print(repr(payload))
+            for item in payload[1:]:
+                seconds = item[1]
+                event = {
+                    'team': 'away',
+                    'player': None,
+                    'seconds': seconds,
+                    'coordinates': None,
+                    'description': 'substitution',
+                    'type': None,
+                    'percentage': None,
+                    'timestamp': datetime.utcnow(),
+                    '_dispatch_match_event': True,
+                }
+                uuid = self.get_uuid(event)
+                self.events[uuid] = event
+            count = self.get_count('away', 'substitution')
+            self.log('/stats/away/substitutions', count)
             return
         if payload[0][0].endswith('/stats/away/throwIns'):
-            # TODO
-            print(repr(payload))
+            for item in payload[1:]:
+                seconds = item[1]
+                event = {
+                    'team': 'away',
+                    'player': None,
+                    'seconds': seconds,
+                    'coordinates': None,
+                    'description': 'throw',
+                    'type': None,
+                    'percentage': None,
+                    'timestamp': datetime.utcnow(),
+                    '_dispatch_match_event': True,
+                }
+                uuid = self.get_uuid(event)
+                self.events[uuid] = event
+            count = self.get_count('away', 'throw')
+            self.log('/stats/away/throwIns', count)
             return
         if payload[0][0].endswith('/stats/home/cards/red'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'home',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'redCard',
                     'type': None,
@@ -384,12 +415,14 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/cards/yellow'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'home',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'yellowCard',
                     'type': None,
@@ -404,12 +437,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/corners'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'home',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'corner',
                     'type': None,
@@ -424,12 +456,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/freeKicks'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'home',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'dfreekick',
                     'type': None,
@@ -444,12 +475,14 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/goals'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'home',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'goal',
                     'type': 'G',
@@ -462,18 +495,16 @@ class WebSockets():
             count = self.get_count('home', 'goal')
             self.log('/stats/home/goals', count)
             return
-        if payload[0][0].endswith('/stats/home/lineup'):
-            # TODO
-            print(repr(payload))
-            return
         if payload[0][0].endswith('/stats/home/penalties'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                player = None
+                if len(item) >= 3:
+                    player = item[2]
+                seconds = item[1]
                 event = {
                     'team': 'home',
-                    'player': None,
-                    'minute': minute,
+                    'player': player,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'penalty',
                     'type': 'P',
@@ -488,12 +519,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/shots/offTarget'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'home',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'shotoffgoal',
                     'type': None,
@@ -508,12 +538,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/shots/onTarget'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'home',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'shotongoal',
                     'type': None,
@@ -528,12 +557,11 @@ class WebSockets():
             return
         if payload[0][0].endswith('/stats/home/shots/onWoodwork'):
             for item in payload[1:]:
-                minute = item[1]
-                minute = self.get_minute(minute)
+                seconds = item[1]
                 event = {
                     'team': 'home',
                     'player': None,
-                    'minute': minute,
+                    'seconds': seconds,
                     'coordinates': None,
                     'description': 'shotongoal',
                     'type': None,
@@ -547,12 +575,42 @@ class WebSockets():
             self.log('/stats/home/shots/onWoodwork', count)
             return
         if payload[0][0].endswith('/stats/home/substitutions'):
-            # TODO
-            print(repr(payload))
+            for item in payload[1:]:
+                seconds = item[1]
+                event = {
+                    'team': 'home',
+                    'player': None,
+                    'seconds': seconds,
+                    'coordinates': None,
+                    'description': 'substitution',
+                    'type': None,
+                    'percentage': None,
+                    'timestamp': datetime.utcnow(),
+                    '_dispatch_match_event': True,
+                }
+                uuid = self.get_uuid(event)
+                self.events[uuid] = event
+            count = self.get_count('home', 'substitution')
+            self.log('/stats/home/substitutions', count)
             return
         if payload[0][0].endswith('/stats/home/throwIns'):
-            # TODO
-            print(repr(payload))
+            for item in payload[1:]:
+                seconds = item[1]
+                event = {
+                    'team': 'home',
+                    'player': None,
+                    'seconds': seconds,
+                    'coordinates': None,
+                    'description': 'throw',
+                    'type': None,
+                    'percentage': None,
+                    'timestamp': datetime.utcnow(),
+                    '_dispatch_match_event': True,
+                }
+                uuid = self.get_uuid(event)
+                self.events[uuid] = event
+            count = self.get_count('home', 'throw')
+            self.log('/stats/home/throwIns', count)
             return
         if payload[0][0].endswith('/stats/homeTeamPossesion'):
             possession = payload[1][0]
