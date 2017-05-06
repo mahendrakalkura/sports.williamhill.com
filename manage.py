@@ -80,7 +80,7 @@ class WebSockets():
         self.events = {}
 
     @trace
-    def connect(self):
+    def open(self):
         self.connection = WebSocketApp(
             self.URL,
             on_open=self.on_open,
@@ -88,10 +88,13 @@ class WebSockets():
             on_message=self.on_message,
             on_error=self.on_error,
         )
-
-    @trace
-    def run_forever(self):
-        self.connection.run_forever()
+        while True:
+            try:
+                self.connection.run_forever()
+            except KeyboardInterrupt:
+                break
+            except Exception:
+                pass
 
     @trace
     def on_open(self, _):
@@ -1278,8 +1281,7 @@ def execute_matches():
 def execute_web_sockets(id):
     id = int(id)
     web_sockets = WebSockets(id)
-    web_sockets.connect()
-    web_sockets.run_forever()
+    web_sockets.open()
 
 
 @trace
