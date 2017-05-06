@@ -4,6 +4,8 @@ from math import floor
 from pprint import pprint
 from re import compile
 from sys import argv
+from threading import Thread
+from time import time
 from traceback import print_exc
 
 from pytz import timezone, utc
@@ -38,33 +40,32 @@ class WebSockets():
     TYPES_PING_CLIENT = '\x19'
 
     TOPICS = [
-        'sportsbook/football/{id:d}/animation',
-        #     'sportsbook/football/{id:d}/i18n/en-gb/commentary',
-        # 'sportsbook/football/{id:d}/stats/away/cards/red',
-        # 'sportsbook/football/{id:d}/stats/away/cards/yellow',
-        # 'sportsbook/football/{id:d}/stats/away/corners',
-        # 'sportsbook/football/{id:d}/stats/away/freeKicks',
-        # 'sportsbook/football/{id:d}/stats/away/goals',
-        # 'sportsbook/football/{id:d}/stats/away/penalties',
-        # 'sportsbook/football/{id:d}/stats/away/shots/offTarget',
-        # 'sportsbook/football/{id:d}/stats/away/shots/onTarget',
-        # 'sportsbook/football/{id:d}/stats/away/shots/onWoodwork',
-        # 'sportsbook/football/{id:d}/stats/away/substitutions',
-        # 'sportsbook/football/{id:d}/stats/away/throwIns',
-        # 'sportsbook/football/{id:d}/stats/home/cards/red',
-        # 'sportsbook/football/{id:d}/stats/home/cards/yellow',
-        # 'sportsbook/football/{id:d}/stats/home/corners',
-        # 'sportsbook/football/{id:d}/stats/home/freeKicks',
-        # 'sportsbook/football/{id:d}/stats/home/goals',
-        # 'sportsbook/football/{id:d}/stats/home/penalties',
-        # 'sportsbook/football/{id:d}/stats/home/shots/offTarget',
-        # 'sportsbook/football/{id:d}/stats/home/shots/onTarget',
-        # 'sportsbook/football/{id:d}/stats/home/shots/onWoodwork',
-        # 'sportsbook/football/{id:d}/stats/home/substitutions',
-        # 'sportsbook/football/{id:d}/stats/home/throwIns',
-        # 'sportsbook/football/{id:d}/stats/homeTeamPossesion',
-        # 'sportsbook/football/{id:d}/stats/period',
-        # 'sportsbook/football/{id:d}/stats/time',
+        'sportsbook/football/{id:d}/i18n/en-gb/commentary',
+        'sportsbook/football/{id:d}/stats/away/cards/red',
+        'sportsbook/football/{id:d}/stats/away/cards/yellow',
+        'sportsbook/football/{id:d}/stats/away/corners',
+        'sportsbook/football/{id:d}/stats/away/freeKicks',
+        'sportsbook/football/{id:d}/stats/away/goals',
+        'sportsbook/football/{id:d}/stats/away/penalties',
+        'sportsbook/football/{id:d}/stats/away/shots/offTarget',
+        'sportsbook/football/{id:d}/stats/away/shots/onTarget',
+        'sportsbook/football/{id:d}/stats/away/shots/onWoodwork',
+        'sportsbook/football/{id:d}/stats/away/substitutions',
+        'sportsbook/football/{id:d}/stats/away/throwIns',
+        'sportsbook/football/{id:d}/stats/home/cards/red',
+        'sportsbook/football/{id:d}/stats/home/cards/yellow',
+        'sportsbook/football/{id:d}/stats/home/corners',
+        'sportsbook/football/{id:d}/stats/home/freeKicks',
+        'sportsbook/football/{id:d}/stats/home/goals',
+        'sportsbook/football/{id:d}/stats/home/penalties',
+        'sportsbook/football/{id:d}/stats/home/shots/offTarget',
+        'sportsbook/football/{id:d}/stats/home/shots/onTarget',
+        'sportsbook/football/{id:d}/stats/home/shots/onWoodwork',
+        'sportsbook/football/{id:d}/stats/home/substitutions',
+        'sportsbook/football/{id:d}/stats/home/throwIns',
+        'sportsbook/football/{id:d}/stats/homeTeamPossesion',
+        'sportsbook/football/{id:d}/stats/period',
+        'sportsbook/football/{id:d}/stats/time',
     ]
 
     @trace
@@ -162,13 +163,478 @@ class WebSockets():
 
     @trace
     def process_payload(self, payload):
-        if payload[0][0].endswith('/animation'):
-            # TODO
-            print(repr(payload))
-            return
         if payload[0][0].endswith('/i18n/en-gb/commentary'):
-            # TODO
-            print(repr(payload))
+            for item in payload[1:]:
+                if len(item) != 6:
+                    continue
+                if item[4] == 'AWAY_ATTACK':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'attack',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'AWAY_DANGER':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'danger',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'AWAY_SAFE':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'safe',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'BALL_SAFE':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    if not coordinates:
+                        continue
+                    event = {
+                        'team': None,
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': None,
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'CORNER_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'corner',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'CORNER_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'corner',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'FIRST_HALF':
+                    continue
+                if item[4] == 'FREE_KICK_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    if not coordinates:
+                        continue
+                    if coordinates[1] < 0.5:
+                        description = 'dfreekick'
+                    else:
+                        description = 'sfreekick'
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': description,
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'FREE_KICK_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    if not coordinates:
+                        continue
+                    if coordinates[1] < 0.5:
+                        description = 'sfreekick'
+                    else:
+                        description = 'dfreekick'
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': description,
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'FREE_TEXT':
+                    continue
+                if item[4] == 'GAME_STARTING_SOON':
+                    continue
+                if item[4] == 'GOAL_AWAY':
+                    continue
+                if item[4] == 'GOAL_HOME':
+                    continue
+                if item[4] == 'GOAL_KICK_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'goalkick',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'GOAL_KICK_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'goalkick',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'HALF_TIME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': None,
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'halftime',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'HOME_ATTACK':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'attack',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'HOME_DANGER':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'danger',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'HOME_SAFE':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'safe',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'KICK_OFF_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'kickoff',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'KICK_OFF_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'kickoff',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'LINE_UP':
+                    continue
+                if item[4] == 'PENALTY_AWAY':
+                    continue
+                if item[4] == 'PENALTY_HOME':
+                    continue
+                if item[4] == 'PENALTY_MISSED_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'penaltyMiss',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'PENALTY_MISSED_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'penaltyMiss',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'RED_CARD_AWAY':
+                    continue
+                if item[4] == 'RED_CARD_HOME':
+                    continue
+                if item[4] == 'SECOND_HALF':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': None,
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'secondhalf',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'SHOT_BLOCKED_AWAY':
+                    continue
+                if item[4] == 'SHOT_BLOCKED_HOME':
+                    continue
+                if item[4] == 'SHOT_OFF_TARGET_AWAY':
+                    continue
+                if item[4] == 'SHOT_OFF_TARGET_HOME':
+                    continue
+                if item[4] == 'SHOT_ON_TARGET_AWAY':
+                    continue
+                if item[4] == 'SHOT_ON_TARGET_HOME':
+                    continue
+                if item[4] == 'SHOT_ON_WOODWORK_AWAY':
+                    continue
+                if item[4] == 'SHOT_ON_WOODWORK_HOME':
+                    continue
+                if item[4] == 'SUBSTITUTION_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'substitution',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'SUBSTITUTION_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'substitution',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'THROW_IN_AWAY':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'away',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'throw',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'THROW_IN_HOME':
+                    seconds = item[3]
+                    coordinates = self.get_coordinates(item[5])
+                    event = {
+                        'team': 'home',
+                        'player': None,
+                        'seconds': seconds,
+                        'coordinates': coordinates,
+                        'description': 'throw',
+                        'type': None,
+                        'percentage': None,
+                        'timestamp': self.get_timestamp(),
+                        '_dispatch_match_event': True,
+                    }
+                    id = self.get_id(event)
+                    self.events[id] = event
+                    self.log('/i18n/en-gb/commentary', [event['team'], event['seconds'], event['description']])
+                    continue
+                if item[4] == 'YELLOW_CARD_AWAY':
+                    continue
+                if item[4] == 'YELLOW_CARD_HOME':
+                    continue
             return
         if payload[0][0].endswith('/stats/away/cards/red'):
             for item in payload[1:]:
@@ -184,11 +650,11 @@ class WebSockets():
                     'description': 'redCard',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'redCard')
             self.log('/stats/away/cards/red', count)
             return
@@ -206,11 +672,11 @@ class WebSockets():
                     'description': 'yellowCard',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'yellowCard')
             self.log('/stats/away/cards/yellow', count)
             return
@@ -225,11 +691,11 @@ class WebSockets():
                     'description': 'corner',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'corner')
             self.log('/stats/away/corners', count)
             return
@@ -244,11 +710,11 @@ class WebSockets():
                     'description': 'dfreekick',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'dfreekick')
             self.log('/stats/away/freeKicks', count)
             return
@@ -266,11 +732,11 @@ class WebSockets():
                     'description': 'goal',
                     'type': 'G',
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'goal')
             self.log('/stats/away/goals', count)
             return
@@ -288,11 +754,11 @@ class WebSockets():
                     'description': 'penalty',
                     'type': 'P',
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'penalty')
             self.log('/stats/away/penalties', count)
             return
@@ -307,11 +773,11 @@ class WebSockets():
                     'description': 'shotoffgoal',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'shotoffgoal')
             self.log('/stats/away/shots/offTarget', count)
             return
@@ -326,11 +792,11 @@ class WebSockets():
                     'description': 'shotongoal',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'shotongoal')
             self.log('/stats/away/shots/onTarget', count)
             return
@@ -345,11 +811,11 @@ class WebSockets():
                     'description': 'shotongoal',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'shotongoal')
             self.log('/stats/away/shots/onWoodwork', count)
             return
@@ -364,11 +830,11 @@ class WebSockets():
                     'description': 'substitution',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'substitution')
             self.log('/stats/away/substitutions', count)
             return
@@ -383,11 +849,11 @@ class WebSockets():
                     'description': 'throw',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('away', 'throw')
             self.log('/stats/away/throwIns', count)
             return
@@ -405,11 +871,11 @@ class WebSockets():
                     'description': 'redCard',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'redCard')
             self.log('/stats/home/cards/red', count)
             return
@@ -427,11 +893,11 @@ class WebSockets():
                     'description': 'yellowCard',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'yellowCard')
             self.log('/stats/home/cards/yellow', count)
             return
@@ -446,11 +912,11 @@ class WebSockets():
                     'description': 'corner',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'corner')
             self.log('/stats/home/corners', count)
             return
@@ -465,11 +931,11 @@ class WebSockets():
                     'description': 'dfreekick',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'dfreekick')
             self.log('/stats/home/freeKicks', count)
             return
@@ -487,11 +953,11 @@ class WebSockets():
                     'description': 'goal',
                     'type': 'G',
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'goal')
             self.log('/stats/home/goals', count)
             return
@@ -509,11 +975,11 @@ class WebSockets():
                     'description': 'penalty',
                     'type': 'P',
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'penalty')
             self.log('/stats/home/penalties', count)
             return
@@ -528,11 +994,11 @@ class WebSockets():
                     'description': 'shotoffgoal',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'shotoffgoal')
             self.log('/stats/home/shots/offTarget', count)
             return
@@ -547,11 +1013,11 @@ class WebSockets():
                     'description': 'shotongoal',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'shotongoal')
             self.log('/stats/home/shots/onTarget', count)
             return
@@ -566,11 +1032,11 @@ class WebSockets():
                     'description': 'shotongoal',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'shotongoal')
             self.log('/stats/home/shots/onWoodwork', count)
             return
@@ -585,11 +1051,11 @@ class WebSockets():
                     'description': 'substitution',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'substitution')
             self.log('/stats/home/substitutions', count)
             return
@@ -604,11 +1070,11 @@ class WebSockets():
                     'description': 'throw',
                     'type': None,
                     'percentage': None,
-                    'timestamp': datetime.utcnow(),
+                    'timestamp': self.get_timestamp(),
                     '_dispatch_match_event': True,
                 }
-                uuid = self.get_uuid(event)
-                self.events[uuid] = event
+                id = self.get_id(event)
+                self.events[id] = event
             count = self.get_count('home', 'throw')
             self.log('/stats/home/throwIns', count)
             return
@@ -623,11 +1089,11 @@ class WebSockets():
                 'description': 'possession',
                 'type': None,
                 'percentage': home,
-                'timestamp': datetime.utcnow(),
+                'timestamp': self.get_timestamp(),
                 '_dispatch_match_event': True,
             }
-            uuid = self.get_uuid(event)
-            self.events[uuid] = event
+            id = self.get_id(event)
+            self.events[id] = event
             event = {
                 'team': 'away',
                 'player': None,
@@ -636,11 +1102,11 @@ class WebSockets():
                 'description': 'possession',
                 'type': None,
                 'percentage': away,
-                'timestamp': datetime.utcnow(),
+                'timestamp': self.get_timestamp(),
                 '_dispatch_match_event': True,
             }
-            uuid = self.get_uuid(event)
-            self.events[uuid] = event
+            id = self.get_id(event)
+            self.events[id] = event
             self.log('/stats/homeTeamPossesion', [home, away])
             return
         if payload[0][0].endswith('/stats/period'):
@@ -699,6 +1165,13 @@ class WebSockets():
         return count
 
     @trace
+    def get_coordinates(self, coordinates):
+        if not coordinates:
+            return None
+        # TODO
+        return (0.0, 0.0)
+
+    @trace
     def get_headers(self, headers):
         items = []
         for header in headers:
@@ -713,6 +1186,22 @@ class WebSockets():
             return items
         items = self.DELIMITERS_FIELD.join(items)
         return items
+
+    @trace
+    def get_id(self, event):
+        items = []
+        for key, value in event.items():
+            if key == '_dispatch_match_event':
+                continue
+            if key == 'percentage':
+                continue
+            if key == 'timestamp':
+                continue
+            items.append((key, value,))
+        items = sorted(items)
+        items = tuple(items)
+        id = hash(items)
+        return id
 
     @trace
     def get_possession(self, possession):
@@ -754,21 +1243,16 @@ class WebSockets():
         return 'ended'
 
     @trace
+    def get_timestamp(self):
+        timestamp = time()
+        timestamp = int(timestamp)
+        return timestamp
+
+    @trace
     def get_topic(self, payload):
         if payload in self.topics:
             return self.topics[payload]
         return None
-
-    @trace
-    def get_uuid(self, event):
-        del event['_dispatch_match_event']
-        del event['percentage']
-        del event['timestamp']
-        items = event.items()
-        items = sorted(items)
-        items = tuple(items)
-        uuid = hash(items)
-        return uuid
 
 
 @trace
@@ -778,6 +1262,9 @@ def main(options):
         return
     if options[1] == '--web-sockets':
         execute_web_sockets(options[2])
+        return
+    if options[1] == '--threads':
+        execute_threads()
         return
 
 
@@ -793,6 +1280,19 @@ def execute_web_sockets(id):
     web_sockets = WebSockets(id)
     web_sockets.connect()
     web_sockets.run_forever()
+
+
+@trace
+def execute_threads():
+    threads = []
+    matches = process_matches()
+    for match in matches:
+        thread = Thread(target=execute_web_sockets, args=[match['id']])
+        threads.append(thread)
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
 
 
 @trace
