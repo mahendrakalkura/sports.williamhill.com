@@ -88,13 +88,7 @@ class WebSockets():
             on_message=self.on_message,
             on_error=self.on_error,
         )
-        while True:
-            try:
-                self.connection.run_forever()
-            except KeyboardInterrupt:
-                break
-            except Exception:
-                pass
+        self.connection.run_forever()
 
     @trace
     def on_open(self, _):
