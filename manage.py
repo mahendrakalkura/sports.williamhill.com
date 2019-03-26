@@ -12,7 +12,7 @@ from pytz import timezone, utc
 from requests import request
 from websocket import WebSocketApp
 
-PATTERN = compile(r'document\.aip_list\.create_prebuilt_event\((.*?)\);')
+PATTERN = compile(r'document\.ip_list\.create_prebuilt_event\((.*?)\);')
 
 
 def trace(function):
@@ -1294,7 +1294,7 @@ def execute_threads():
 @trace
 def process_matches():
     matches = []
-    url = 'http://sports.williamhill.com/bet/en-gb/betlive/9'
+    url = 'http://sports.williamhill.com/bet/en-gb//betlive/9'
     response = request(method='GET', url=url)
     if not response:
         return matches
